@@ -8,7 +8,7 @@ import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import BottomNav from './components/BottomNav';
-import { LiffProvider } from './contexts/LiffContext';
+import { LiffProvider, useLiff } from './contexts/LiffContext';
 import { ProductProvider } from './contexts/ProductContext';
 import { BookingProvider } from './contexts/BookingContext';
 import { CartProvider } from './contexts/CartContext';
