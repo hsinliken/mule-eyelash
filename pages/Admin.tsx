@@ -558,6 +558,33 @@ const Admin: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Upload Area */}
+                  <div className="border-2 border-dashed border-brand-300 rounded-xl p-8 text-center bg-brand-50/50 hover:bg-brand-50 transition-colors cursor-pointer relative mb-8">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        console.log('File selected:', e.target.files);
+                        if (e.target.files && e.target.files[0]) {
+                          uploadImage(e.target.files[0])
+                            .then(() => alert('上傳成功！'))
+                            .catch((err) => {
+                              console.error(err);
+                              alert('上傳失敗: ' + err.message);
+                            });
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="flex flex-col items-center gap-2 text-brand-400">
+                      {isGalleryLoading ? (
+                        <div className="w-8 h-8 border-2 border-brand-300 border-t-brand-600 rounded-full animate-spin"></div>
+                      ) : (
+                        <Plus size={32} />
+                      )}
+                      <span className="text-sm font-medium">點擊或拖這上傳圖片</span>
+                    </div>
+                  </div>
                   {/* Status Tabs */}
                   <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     {[
@@ -912,7 +939,102 @@ const Admin: React.FC = () => {
           </>
         )}
 
-        {/* DOCS TAB */}
+        {/* GALLERY TAB */}
+        {activeTab === 'gallery' && (
+          <div className="bg-white rounded-xl shadow-lg border border-brand-200 p-5 mb-6 animate-fade-in">
+            <h2 className="text-lg font-medium text-brand-900 mb-6 flex items-center gap-2">
+              <ImageIcon size={20} className="text-brand-500" />
+              圖片庫
+            </h2>
+
+            {/* Upload Area - Parallel Design */}
+            <div className="mb-8">
+              <input
+                type="file"
+                accept="image/*"
+                id="gallery-upload-input"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    uploadImage(e.target.files[0])
+                      .then(() => alert('上傳成功！'))
+                      .catch((err) => alert('上傳失敗: ' + err.message));
+                  }
+                }}
+              />
+
+              <div
+                onClick={() => document.getElementById('gallery-upload-input')?.click()}
+                className="group border-2 border-dashed border-brand-300 rounded-xl p-8 text-center bg-brand-50/50 hover:bg-brand-50 hover:border-brand-500 transition-all cursor-pointer relative flex flex-col items-center gap-4"
+              >
+                <div className="p-4 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                  {isGalleryLoading ? (
+                    <div className="w-8 h-8 border-2 border-brand-300 border-t-brand-600 rounded-full animate-spin"></div>
+                  ) : (
+                    <Plus size={32} className="text-brand-500" />
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-brand-900 font-medium">點擊或拖曳圖片至此</h3>
+                  <p className="text-xs text-brand-400">支援 .jpg, .png (建議 1MB 以下)</p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full my-2">
+                  <div className="h-px bg-brand-200 flex-1"></div>
+                  <span className="text-xs text-brand-400 font-medium">或</span>
+                  <div className="h-px bg-brand-200 flex-1"></div>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent double trigger
+                    document.getElementById('gallery-upload-input')?.click();
+                  }}
+                  className="bg-brand-800 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-brand-900 transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <Download size={16} className="rotate-180" /> 選擇檔案
+                </button>
+              </div>
+            </div>
+
+            {/* Image Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {galleryImages.map(img => (
+                <div key={img.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border border-brand-200 shadow-sm hover:shadow-md transition-all">
+                  <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 p-4">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(img.url);
+                        alert('網址已複製！');
+                      }}
+                      className="w-full py-2 bg-white text-brand-900 text-xs rounded-lg font-bold hover:bg-brand-50 flex items-center justify-center gap-1"
+                    >
+                      <Tag size={12} /> 複製網址
+                    </button>
+                    <button
+                      onClick={() => deleteImage(img.id, img.url)}
+                      className="w-full py-2 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 flex items-center justify-center gap-1"
+                    >
+                      <Trash2 size={12} /> 刪除圖片
+                    </button>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-[10px] text-white truncate text-center">{new Date(img.createdAt?.seconds * 1000).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {galleryImages.length === 0 && (
+              <div className="text-center text-brand-400 text-sm py-12 bg-brand-50 rounded-xl border border-brand-100 border-dashed">
+                目前還沒有圖片，試著上傳第一張吧！
+              </div>
+            )}
+          </div>
+        )}
+
+
         {activeTab === 'docs' && (
           <div className="space-y-4 animate-fade-in">
             <div className="bg-brand-50 p-4 rounded-xl border border-brand-100 flex gap-4 items-start">
