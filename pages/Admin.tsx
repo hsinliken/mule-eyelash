@@ -242,8 +242,8 @@ const Admin: React.FC = () => {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2 ${apt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                        apt.status === 'completed' ? 'bg-gray-100 text-gray-500' :
-                          'bg-brand-100 text-brand-700'
+                      apt.status === 'completed' ? 'bg-gray-100 text-gray-500' :
+                        'bg-brand-100 text-brand-700'
                       }`}>
                       {getStatusLabel(apt.status)}
                     </span>
@@ -258,10 +258,16 @@ const Admin: React.FC = () => {
                   <span className="text-brand-400">美容師:</span>
                   <span className="font-medium">{getStylistName(apt.stylistId)}</span>
                 </div>
+                {apt.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <button onClick={() => updateAppointmentStatus(apt.id, 'confirmed')} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">接受預約</button>
+                    <button onClick={() => { if (window.confirm('確定要婉拒此預約嗎？')) updateAppointmentStatus(apt.id, 'cancelled'); }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">婉拒預約</button>
+                  </div>
+                )}
                 {apt.status === 'confirmed' && (
                   <div className="flex gap-2">
-                    <button onClick={() => { if (window.confirm('確認已完成服務？')) updateAppointmentStatus(apt.id, 'completed'); }} className="flex-1 bg-brand-50 text-brand-600 border border-brand-200 py-2 rounded-lg text-xs font-medium">完成服務</button>
-                    <button onClick={() => { if (window.confirm('確認取消？')) updateAppointmentStatus(apt.id, 'cancelled'); }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium">取消</button>
+                    <button onClick={() => { if (window.confirm('確認已完成服務？')) updateAppointmentStatus(apt.id, 'completed'); }} className="flex-1 bg-brand-50 text-brand-600 border border-brand-200 py-2 rounded-lg text-xs font-medium hover:bg-brand-100">完成服務</button>
+                    <button onClick={() => { if (window.confirm('確認取消？')) updateAppointmentStatus(apt.id, 'cancelled'); }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">取消</button>
                   </div>
                 )}
               </div>
@@ -518,8 +524,8 @@ const Admin: React.FC = () => {
                         key={st.val}
                         onClick={() => setOrderFilterStatus(st.val as any)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${orderFilterStatus === st.val
-                            ? 'bg-brand-800 text-white border-brand-800'
-                            : 'bg-white text-brand-500 border-brand-200 hover:bg-brand-50'
+                          ? 'bg-brand-800 text-white border-brand-800'
+                          : 'bg-white text-brand-500 border-brand-200 hover:bg-brand-50'
                           }`}
                       >
                         {st.label}
@@ -555,10 +561,10 @@ const Admin: React.FC = () => {
                         </div>
                         <div className="text-right flex flex-col items-end gap-1">
                           <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                              order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                                order.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                  order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                    'bg-gray-100 text-gray-500'
+                            order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                              order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                  'bg-gray-100 text-gray-500'
                             }`}>
                             {getStatusLabel(order.status)}
                           </span>
