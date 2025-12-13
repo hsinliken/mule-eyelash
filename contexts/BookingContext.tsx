@@ -22,12 +22,19 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // 監聽 Firestore 的 bookings 集合
   useEffect(() => {
-    const q = query(collection(db, 'bookings'), orderBy('date', 'desc'), orderBy('time', 'asc'));
+    const q = query(collection(db, 'bookings'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const apts: Appointment[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Appointment));
+
+      // Client-side sort by time for same-day items since we can't easily do double-sort in Firestore without index
+      apts.sort((a, b) => {
+        if (a.date !== b.date) return 0; // Already sorted by date desc by Firestore
+        return a.time.localeCompare(b.time);
+      });
+
       setAppointments(apts);
     });
 
