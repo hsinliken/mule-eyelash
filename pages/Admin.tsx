@@ -305,9 +305,43 @@ const Admin: React.FC = () => {
 
                     }} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">確認 & 發送通知</button>
 
-                    <button onClick={() => {
+                    <button onClick={async () => {
                       if (window.confirm('確定要婉拒此預約嗎？')) {
+                        // 1. Update Status
                         updateAppointmentStatus(apt.id, 'cancelled');
+
+                        // 2. Generate Notification Text (Rejection)
+                        const customerName = apt.userInfo?.displayName || '貴賓';
+                        const serviceName = getServiceName(apt.serviceId);
+                        const msg = `您好 ${customerName}，\n很抱歉通知您，關於您預約的「${serviceName}」(${apt.date} ${apt.time})，\n因設計師該時段行程臨時有變動，我們無法為您保留此預約。\n\n建議您可以查看其他時段，或直接與我們聯繫安排。造成不便請見諒！🙏`;
+
+                        // 3. Attempt to send via API (Same as Confirm)
+                        if (apt.userInfo?.userId) {
+                          try {
+                            const res = await fetch('/api/send-line-push', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                to: apt.userInfo.userId,
+                                message: msg
+                              })
+                            });
+
+                            if (res.ok) {
+                              alert(`已婉拒預約！\n\nLINE 通知已自動發送給 ${customerName}。`);
+                              return;
+                            }
+                          } catch (err) {
+                            console.error('Network Error:', err);
+                          }
+                        }
+
+                        // 4. Fallback: Copy to clipboard
+                        navigator.clipboard.writeText(msg).then(() => {
+                          alert('已婉拒預約！\n\n(已自動複製通知訊息)\n請貼上並回覆給客人以告知取消原因。');
+                        }).catch(() => {
+                          alert('已婉拒預約！\n\n(自動複製訊息失敗，請手動聯繫)');
+                        });
                       }
                     }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">婉拒預約</button>
                   </div>
