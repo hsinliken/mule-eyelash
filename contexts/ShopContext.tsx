@@ -11,7 +11,7 @@ const ShopContext = createContext<ShopContextType>({
     name: 'MULE EYELASH',
     subtitle: 'STUDIO',
     logo: '',
-    lineId: '@0970421267',
+    lineId: 'https://lin.ee/BpNFDWqS',
     liffId: '2008685421-wjbyqf1k'
   },
   updateSettings: () => { },
@@ -24,7 +24,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: 'MULE EYELASH',
     subtitle: 'STUDIO',
     logo: 'https://cdn-icons-png.flaticon.com/512/3163/3163219.png', // 預設暫時圖示
-    lineId: '@0970421267', // 預設商家 LINE ID
+    lineId: 'https://lin.ee/BpNFDWqS', // 預設商家 LINE 連結
     liffId: '2008685421-wjbyqf1k' // 預設 LIFF ID
   });
 
