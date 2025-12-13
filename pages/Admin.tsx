@@ -273,39 +273,29 @@ const Admin: React.FC = () => {
                       const msg = `您好 ${customerName}，\n感謝您的預約！\n\n項目：${serviceName}\n時間：${apt.date} ${apt.time}\n\n您的預約已確認完成，期待您的光臨！😊`;
 
 
-                      // 3. Attempt to send via Make (Integromat) Webhook or Fallback
-                      if (settings.makeWebhookUrl && apt.userInfo?.userId) {
+                      // 3. Attempt to send via Vercel Backend API
+                      if (apt.userInfo?.userId) {
                         try {
-                          const res = await fetch(settings.makeWebhookUrl, {
+                          const res = await fetch('/api/send-line-push', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                              type: 'push',
                               to: apt.userInfo.userId,
                               message: msg
                             })
                           });
 
                           if (res.ok) {
-                            alert(`已確認預約！\n\nLINE 通知已透過 Make 自動發送給 ${customerName}。`);
-                            return;
+                            alert(`已確認預約！\n\n已呼叫系統後端發送 LINE 通知給 ${customerName}。`);
                           } else {
-                            console.error('Make Webhook Failed:', res.statusText);
-                            alert('Make Webhook 發送失敗，將切換為手動複製模式。');
+                            console.error('API Error:', res.statusText);
+                            alert('發送失敗 (請確認 Vercel 環境變數已設定 LINE_CHANNEL_ACCESS_TOKEN)');
                           }
                         } catch (err) {
-                          console.error('Network Error:', err);
-                          alert('網路連線失敗，將切換為手動複製模式。');
+                          console.error('Notification Error:', err);
+                          alert('網路連線失敗，請稍後再試。');
                         }
                       }
-
-                      // 4. Fallback: Copy to clipboard
-                      navigator.clipboard.writeText(msg).then(() => {
-                        const reason = settings.makeWebhookUrl ? '(Make 發送失敗)' : '(未設定 Make Webhook)';
-                        alert(`已確認預約！\n\n${reason}\n通知訊息已複製到剪貼簿，請手動回覆。`);
-                      }).catch(() => {
-                        alert('已確認預約！\n\n(自動發送失敗，且無法複製訊息，請手動聯繫)');
-                      });
 
                     }} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">確認 & 發送通知</button>
 
@@ -320,39 +310,29 @@ const Admin: React.FC = () => {
                         const msg = `您好 ${customerName}，\n很抱歉通知您，關於您預約的「${serviceName}」(${apt.date} ${apt.time})，\n因設計師該時段行程臨時有變動，我們無法為您保留此預約。\n\n建議您可以查看其他時段，或直接與我們聯繫安排。造成不便請見諒！🙏`;
 
 
-                        // 3. Attempt to send via Make (Integromat) Webhook or Fallback
-                        if (settings.makeWebhookUrl && apt.userInfo?.userId) {
+                        // 3. Attempt to send via Vercel Backend API
+                        if (apt.userInfo?.userId) {
                           try {
-                            const res = await fetch(settings.makeWebhookUrl, {
+                            const res = await fetch('/api/send-line-push', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                type: 'push',
                                 to: apt.userInfo.userId,
                                 message: msg
                               })
                             });
 
                             if (res.ok) {
-                              alert(`已婉拒預約！\n\nLINE 通知已透過 Make 自動發送給 ${customerName}。`);
-                              return;
+                              alert(`已婉拒預約！\n\n已呼叫系統後端發送 LINE 通知。`);
                             } else {
-                              console.error('Make Webhook Failed:', res.statusText);
-                              alert('Make Webhook 發送失敗，將切換為手動複製模式。');
+                              console.error('API Error:', res.statusText);
+                              alert('發送失敗 (請確認 Vercel 環境變數已設定 LINE_CHANNEL_ACCESS_TOKEN)');
                             }
                           } catch (err) {
-                            console.error('Network Error:', err);
-                            alert('網路連線失敗，將切換為手動複製模式。');
+                            console.error('Notification Error:', err);
+                            alert('網路連線失敗。');
                           }
                         }
-
-                        // 4. Fallback: Copy to clipboard
-                        navigator.clipboard.writeText(msg).then(() => {
-                          const reason = settings.makeWebhookUrl ? '(Make 發送失敗)' : '(未設定 Make Webhook)';
-                          alert(`已婉拒預約！\n\n${reason}\n(已自動複製通知訊息)\n請貼上並回覆給客人以告知取消原因。`);
-                        }).catch(() => {
-                          alert('已婉拒預約！\n\n(自動複製訊息失敗，請手動聯繫)');
-                        });
                       }
                     }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">婉拒預約</button>
                   </div>
@@ -458,15 +438,54 @@ const Admin: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-brand-500 uppercase mb-2">Make (Integromat) Webhook URL</label>
-                <input
-                  type="text"
-                  value={settingsForm.makeWebhookUrl || ''}
-                  onChange={e => setSettingsForm({ ...settingsForm, makeWebhookUrl: e.target.value })}
-                  placeholder="例如: https://hook.eu1.make.com/..."
-                  className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm"
-                />
-                <p className="text-[10px] text-brand-400 mt-1">用於自動發送 LINE 通知。請在 Make 中建立 Custom Webhook 並填入此處。</p>
+                <label className="block text-xs font-bold text-brand-500 uppercase mb-2">LINE Messaging API 設定</label>
+                <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 space-y-4">
+                  <div className="flex gap-2 items-center text-sm text-brand-800">
+                    <span className="font-bold shrink-0">您的 Webhook URL:</span>
+                    <code className="bg-white px-2 py-1 rounded border border-brand-200 select-all">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/api/webhook` : '/api/webhook'}
+                    </code>
+                  </div>
+                  <p className="text-[10px] text-brand-400">
+                    請將上方網址複製到 LINE Developers Console 的 Webhook settings 中，並啟用 "Use webhook"。
+                  </p>
+
+                  <div className="pt-2 border-t border-brand-100">
+                    <p className="text-xs font-medium text-brand-700 mb-1">環境變數 (請在 Vercel 設定):</p>
+                    <ul className="list-disc list-inside text-[10px] text-brand-500 space-y-1">
+                      <li>LINE_CHANNEL_ACCESS_TOKEN (用於發送訊息)</li>
+                      <li>LINE_CHANNEL_SECRET (用於驗證 Webhook)</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/send-line-push', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              to: 'USER_ID_PLACEHOLDER', // This will fail but valid connection test
+                              message: 'Test'
+                            })
+                          });
+                          // 400 means connected but invalid ID, which is good enough connection test
+                          if (res.ok || res.status === 400 || res.status === 500) {
+                            alert('後端連線正常! (若收到 500 請檢查 Vercel 環境變數)');
+                          } else {
+                            alert('連線失敗: ' + res.status);
+                          }
+                        } catch (e) {
+                          alert('連線錯誤: ' + e);
+                        }
+                      }}
+                      className="text-xs bg-brand-100 text-brand-700 px-3 py-1 rounded hover:bg-brand-200 transition-colors"
+                    >
+                      測試後端連線
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
