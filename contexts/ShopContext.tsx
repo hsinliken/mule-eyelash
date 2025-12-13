@@ -25,7 +25,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     subtitle: 'STUDIO',
     logo: 'https://cdn-icons-png.flaticon.com/512/3163/3163219.png', // 預設暫時圖示
     lineId: 'https://lin.ee/BpNFDWqS', // 預設商家 LINE 連結
-    liffId: '2008685421-wjbyqf1k' // 預設 LIFF ID
+    liffId: '2008685421-wjbyqf1k', // 預設 LIFF ID
+    makeWebhookUrl: '' // 預設 Make Webhook URL
   });
 
   const updateSettings = (newSettings: Partial<ShopSettings>) => {

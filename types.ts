@@ -90,6 +90,7 @@ export interface ShopSettings {
   logo: string; // URL of the logo image
   lineId: string; // LINE ID for customer service (e.g. @mule_eyelash)
   liffId: string; // LIFF ID for Login (e.g. 1657xxx-xxxx)
+  makeWebhookUrl?: string; // Make (Integromat) Webhook URL for notifications
 }
 
 export enum Page {

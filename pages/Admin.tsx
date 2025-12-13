@@ -272,33 +272,37 @@ const Admin: React.FC = () => {
                       const serviceName = getServiceName(apt.serviceId);
                       const msg = `您好 ${customerName}，\n感謝您的預約！\n\n項目：${serviceName}\n時間：${apt.date} ${apt.time}\n\n您的預約已確認完成，期待您的光臨！😊`;
 
-                      // 3. Attempt to send via API
-                      if (apt.userInfo?.userId) {
+
+                      // 3. Attempt to send via Make (Integromat) Webhook or Fallback
+                      if (settings.makeWebhookUrl && apt.userInfo?.userId) {
                         try {
-                          // Show loading indicator or just a toast? For now, standard alert after success.
-                          const res = await fetch('/api/send-line-push', {
+                          const res = await fetch(settings.makeWebhookUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
+                              type: 'push',
                               to: apt.userInfo.userId,
                               message: msg
                             })
                           });
 
                           if (res.ok) {
-                            alert(`已確認預約！\n\nLINE 通知已自動發送給 ${customerName}。`);
-                            return; // Success, stop here.
+                            alert(`已確認預約！\n\nLINE 通知已透過 Make 自動發送給 ${customerName}。`);
+                            return;
                           } else {
-                            console.error('Push Notification Failed:', await res.json());
+                            console.error('Make Webhook Failed:', res.statusText);
+                            alert('Make Webhook 發送失敗，將切換為手動複製模式。');
                           }
                         } catch (err) {
                           console.error('Network Error:', err);
+                          alert('網路連線失敗，將切換為手動複製模式。');
                         }
                       }
 
-                      // 4. Fallback: Copy to clipboard if API fails or no userId
+                      // 4. Fallback: Copy to clipboard
                       navigator.clipboard.writeText(msg).then(() => {
-                        alert('已確認預約！\n\n(注意：自動發送失敗或無 User ID)\n通知訊息已複製到剪貼簿，請手動回覆。');
+                        const reason = settings.makeWebhookUrl ? '(Make 發送失敗)' : '(未設定 Make Webhook)';
+                        alert(`已確認預約！\n\n${reason}\n通知訊息已複製到剪貼簿，請手動回覆。`);
                       }).catch(() => {
                         alert('已確認預約！\n\n(自動發送失敗，且無法複製訊息，請手動聯繫)');
                       });
@@ -315,30 +319,37 @@ const Admin: React.FC = () => {
                         const serviceName = getServiceName(apt.serviceId);
                         const msg = `您好 ${customerName}，\n很抱歉通知您，關於您預約的「${serviceName}」(${apt.date} ${apt.time})，\n因設計師該時段行程臨時有變動，我們無法為您保留此預約。\n\n建議您可以查看其他時段，或直接與我們聯繫安排。造成不便請見諒！🙏`;
 
-                        // 3. Attempt to send via API (Same as Confirm)
-                        if (apt.userInfo?.userId) {
+
+                        // 3. Attempt to send via Make (Integromat) Webhook or Fallback
+                        if (settings.makeWebhookUrl && apt.userInfo?.userId) {
                           try {
-                            const res = await fetch('/api/send-line-push', {
+                            const res = await fetch(settings.makeWebhookUrl, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
+                                type: 'push',
                                 to: apt.userInfo.userId,
                                 message: msg
                               })
                             });
 
                             if (res.ok) {
-                              alert(`已婉拒預約！\n\nLINE 通知已自動發送給 ${customerName}。`);
+                              alert(`已婉拒預約！\n\nLINE 通知已透過 Make 自動發送給 ${customerName}。`);
                               return;
+                            } else {
+                              console.error('Make Webhook Failed:', res.statusText);
+                              alert('Make Webhook 發送失敗，將切換為手動複製模式。');
                             }
                           } catch (err) {
                             console.error('Network Error:', err);
+                            alert('網路連線失敗，將切換為手動複製模式。');
                           }
                         }
 
                         // 4. Fallback: Copy to clipboard
                         navigator.clipboard.writeText(msg).then(() => {
-                          alert('已婉拒預約！\n\n(已自動複製通知訊息)\n請貼上並回覆給客人以告知取消原因。');
+                          const reason = settings.makeWebhookUrl ? '(Make 發送失敗)' : '(未設定 Make Webhook)';
+                          alert(`已婉拒預約！\n\n${reason}\n(已自動複製通知訊息)\n請貼上並回覆給客人以告知取消原因。`);
                         }).catch(() => {
                           alert('已婉拒預約！\n\n(自動複製訊息失敗，請手動聯繫)');
                         });
@@ -444,6 +455,18 @@ const Admin: React.FC = () => {
                   className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm"
                 />
                 <p className="text-[10px] text-brand-400 mt-1">用於系統登入。更改後需重新整理頁面。</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-500 uppercase mb-2">Make (Integromat) Webhook URL</label>
+                <input
+                  type="text"
+                  value={settingsForm.makeWebhookUrl || ''}
+                  onChange={e => setSettingsForm({ ...settingsForm, makeWebhookUrl: e.target.value })}
+                  placeholder="例如: https://hook.eu1.make.com/..."
+                  className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm"
+                />
+                <p className="text-[10px] text-brand-400 mt-1">用於自動發送 LINE 通知。請在 Make 中建立 Custom Webhook 並填入此處。</p>
               </div>
             </div>
 
