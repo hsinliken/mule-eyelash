@@ -46,7 +46,12 @@ export interface Appointment {
   stylistId: string;
   date: string; // ISO string
   time: string;
-  status: 'confirmed' | 'completed' | 'cancelled';
+  status: 'confirmed' | 'completed' | 'cancelled' | 'pending';
+  userInfo?: {
+    userId: string;
+    displayName: string;
+    pictureUrl?: string;
+  };
 }
 
 export interface CartItem extends Product {

@@ -260,8 +260,26 @@ const Admin: React.FC = () => {
                 </div>
                 {apt.status === 'pending' && (
                   <div className="flex gap-2">
-                    <button onClick={() => updateAppointmentStatus(apt.id, 'confirmed')} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">接受預約</button>
-                    <button onClick={() => { if (window.confirm('確定要婉拒此預約嗎？')) updateAppointmentStatus(apt.id, 'cancelled'); }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">婉拒預約</button>
+                    <button onClick={() => {
+                      updateAppointmentStatus(apt.id, 'confirmed');
+                      // Generate notification text
+                      const customerName = apt.userInfo?.displayName || '貴賓';
+                      const serviceName = getServiceName(apt.serviceId);
+                      const msg = `您好 ${customerName}，\n感謝您的預約！\n\n項目：${serviceName}\n時間：${apt.date} ${apt.time}\n\n您的預約已確認完成，期待您的光臨！😊`;
+
+                      // Copy to clipboard
+                      navigator.clipboard.writeText(msg).then(() => {
+                        alert('已確認預約！\n\n通知訊息已複製到剪貼簿，請至 LINE 官方帳號貼上回覆客人：\n\n' + msg);
+                      }).catch(() => {
+                        alert('已確認預約！\n\n(無法自動複製訊息，請手動輸入通知)');
+                      });
+                    }} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">接受 & 複製通知</button>
+
+                    <button onClick={() => {
+                      if (window.confirm('確定要婉拒此預約嗎？')) {
+                        updateAppointmentStatus(apt.id, 'cancelled');
+                      }
+                    }} className="flex-1 bg-white text-red-400 border border-red-100 py-2 rounded-lg text-xs font-medium hover:bg-red-50">婉拒預約</button>
                   </div>
                 )}
                 {apt.status === 'confirmed' && (
