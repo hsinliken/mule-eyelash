@@ -5,6 +5,7 @@ import { useOrders } from '../contexts/OrderContext';
 import { useStylists } from '../contexts/StylistContext';
 import { usePromotions } from '../contexts/PromotionContext';
 import { useShop } from '../contexts/ShopContext';
+import { useGallery } from '../contexts/GalleryContext';
 import { Product, Stylist, Promotion, Order, OrderStatus } from '../types';
 import { SERVICES } from '../constants';
 import { Plus, Edit2, Trash2, X, Save, Package, Truck, Check, User, Calendar, Clock, ImageIcon, Tag, FileText, Download, MapPin, CreditCard, DollarSign, Filter, RefreshCcw, Settings as SettingsIcon, BookOpen, MessageCircle } from 'lucide-react';
@@ -17,8 +18,9 @@ const Admin: React.FC = () => {
   const { stylists, addStylist, updateStylist, deleteStylist } = useStylists();
   const { promotions, addPromotion, updatePromotion, deletePromotion } = usePromotions();
   const { settings, updateSettings } = useShop();
+  const { images: galleryImages, uploadImage, isLoading: isGalleryLoading, deleteImage } = useGallery();
 
-  const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings' | 'gallery'>('bookings');
 
   // --- PRODUCT FORM STATE ---
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -194,6 +196,7 @@ const Admin: React.FC = () => {
     { id: 'stylists', label: '美容師' },
     { id: 'products', label: '商品' },
     { id: 'promotions', label: '行銷' },
+    { id: 'gallery', label: '圖庫' },
     { id: 'settings', label: '設定' },
     { id: 'docs', label: '手冊' },
   ];

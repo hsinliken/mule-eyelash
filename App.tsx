@@ -16,6 +16,7 @@ import { OrderProvider } from './contexts/OrderContext';
 import { StylistProvider } from './contexts/StylistContext';
 import { PromotionProvider } from './contexts/PromotionContext';
 import { ShopProvider } from './contexts/ShopContext';
+import { GalleryProvider } from './contexts/GalleryContext';
 
 // Scroll to top on route change wrapper
 const ScrollToTop = () => {
@@ -32,39 +33,41 @@ const App: React.FC = () => {
   return (
     <ShopProvider>
       <LiffProvider>
-        <ProductProvider>
-          <StylistProvider>
-            <PromotionProvider>
-              <BookingProvider>
-                <CartProvider>
-                  <OrderProvider>
-                    <Router>
-                      <ScrollToTop />
-                      {/* 
-                        Container setup to emulate a mobile app view on larger screens.
-                        Background color set to brand off-white.
-                      */}
-                      <div className="min-h-screen bg-gray-100 flex justify-center">
-                        <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
-                          <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/booking" element={<Booking />} />
-                            <Route path="/shop" element={<Shop />} />
-                            <Route path="/cart" element={<Cart />} />
-                            <Route path="/checkout" element={<Checkout />} />
-                            <Route path="/profile" element={<Profile />} />
-                            <Route path="/admin" element={<Admin />} />
-                          </Routes>
-                          <BottomNav />
+        <GalleryProvider>
+          <ProductProvider>
+            <StylistProvider>
+              <PromotionProvider>
+                <BookingProvider>
+                  <CartProvider>
+                    <OrderProvider>
+                      <Router>
+                        <ScrollToTop />
+                        {/* 
+                          Container setup to emulate a mobile app view on larger screens.
+                          Background color set to brand off-white.
+                        */}
+                        <div className="min-h-screen bg-gray-100 flex justify-center">
+                          <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
+                            <Routes>
+                              <Route path="/" element={<Home />} />
+                              <Route path="/booking" element={<Booking />} />
+                              <Route path="/shop" element={<Shop />} />
+                              <Route path="/cart" element={<Cart />} />
+                              <Route path="/checkout" element={<Checkout />} />
+                              <Route path="/profile" element={<Profile />} />
+                              <Route path="/admin" element={<Admin />} />
+                            </Routes>
+                            <BottomNav />
+                          </div>
                         </div>
-                      </div>
-                    </Router>
-                  </OrderProvider>
-                </CartProvider>
-              </BookingProvider>
-            </PromotionProvider>
-          </StylistProvider>
-        </ProductProvider>
+                      </Router>
+                    </OrderProvider>
+                  </CartProvider>
+                </BookingProvider>
+              </PromotionProvider>
+            </StylistProvider>
+          </ProductProvider>
+        </GalleryProvider>
       </LiffProvider>
     </ShopProvider>
   );
