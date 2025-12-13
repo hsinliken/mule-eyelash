@@ -40,10 +40,16 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isMockMode, setIsMockMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const initCalled = React.useRef(false);
+
   useEffect(() => {
     const currentLiffId = settings.liffId;
 
-    // 檢查 LIFF ID 是否存在
+    // 0. 防止重複執行 (Strict Mode 或快速重整導致)
+    if (initCalled.current) return;
+    initCalled.current = true;
+
+    // 1. 檢查 LIFF ID 是否存在
     if (!currentLiffId || currentLiffId === 'YOUR_LIFF_ID') {
       console.log('⚠️ LIFF ID 未設定，啟用模擬模式 (Mock Mode)。');
       setIsMockMode(true);
@@ -51,28 +57,35 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // 初始化真實 LIFF
-    liff
-      .init({ liffId: currentLiffId })
-      .then(() => {
+    // 2. 初始化真實 LIFF (加入 3 秒超時機制)
+    const initLiff = async () => {
+      try {
+        await Promise.race([
+          liff.init({ liffId: currentLiffId }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('LIFF init timeout')), 3000))
+        ]);
+
         setLiffObject(liff);
         if (liff.isLoggedIn()) {
           setIsLoggedIn(true);
-          liff
-            .getProfile()
-            .then((p: any) => setProfile(p))
-            .catch((e: any) => console.error('Failed to get profile:', e));
+          try {
+            const p = await liff.getProfile();
+            setProfile(p as any);
+          } catch (e) {
+            console.error('Failed to get profile:', e);
+          }
         }
-      })
-      .catch((err: any) => {
-        console.warn('LIFF Initialization failed:', err);
-        setError(err.message);
-        // 若初始化失敗（例如網路問題或 ID 錯誤），也切換回模擬模式以免 App 當掉
+      } catch (err: any) {
+        console.warn('LIFF Initialization failed or timed out:', err);
+        setError(err.message || 'LIFF Init Failed');
+        // 初始化失敗時，切換回模擬模式或至少讓 isInitialized = true 以便顯示錯誤 UI，而不是卡在 Loading
         setIsMockMode(true);
-      })
-      .finally(() => {
+      } finally {
         setIsInitialized(true);
-      });
+      }
+    };
+
+    initLiff();
   }, [settings.liffId]); // 當設定中的 LIFF ID 改變時重新執行
 
   const login = () => {
