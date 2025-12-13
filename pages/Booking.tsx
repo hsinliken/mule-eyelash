@@ -117,8 +117,8 @@ const Booking: React.FC = () => {
         console.error('Error sending LINE message', error);
       }
     } else {
-      // Fallback for browser testing
-      alert(`【測試環境提示】\n因為不在 LINE App 內，發送訊息功能已略過。\n\n實際預約內容：\n項目: ${selectedService.title}\n時間: ${selectedDate} ${selectedTime}`);
+      // Fallback for browser testing - Alert removed as requested
+      // alert(`【測試環境提示】\n因為不在 LINE App 內，發送訊息功能已略過。\n\n實際預約內容：\n項目: ${selectedService.title}\n時間: ${selectedDate} ${selectedTime}`);
     }
 
     setTimeout(() => {

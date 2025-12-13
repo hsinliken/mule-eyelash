@@ -11,7 +11,10 @@ import { SERVICES } from '../constants';
 import { Plus, Edit2, Trash2, X, Save, Package, Truck, Check, User, Calendar, Clock, ImageIcon, Tag, FileText, Download, MapPin, CreditCard, DollarSign, Filter, RefreshCcw, Settings as SettingsIcon, BookOpen, MessageCircle } from 'lucide-react';
 import { DEV_SPEC_MD, USER_MANUAL_MD } from '../docs';
 
+import { useLiff } from '../contexts/LiffContext';
+
 const Admin: React.FC = () => {
+  const { isLoggedIn, profile, login } = useLiff();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { appointments, updateAppointmentStatus } = useBookings();
   const { orders, updateOrder } = useOrders();
@@ -20,7 +23,103 @@ const Admin: React.FC = () => {
   const { settings, updateSettings } = useShop();
   const { images: galleryImages, uploadImage, isLoading: isGalleryLoading, deleteImage } = useGallery();
 
+
   const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings' | 'gallery'>('bookings');
+
+  // --- AUTH STATE ---
+  const [superAdminUser, setSuperAdminUser] = useState('');
+  const [superAdminPass, setSuperAdminPass] = useState('');
+  const [isSuperAdminLoggedIn, setIsSuperAdminLoggedIn] = useState(false);
+
+  const isAuthorized = React.useMemo(() => {
+    // 1. Super Admin
+    if (isSuperAdminLoggedIn) return true;
+    // 2. LINE Admin (if logged in and userId is in adminIds list)
+    if (isLoggedIn && profile?.userId && settings.adminIds?.includes(profile.userId)) return true;
+    return false;
+  }, [isSuperAdminLoggedIn, isLoggedIn, profile, settings.adminIds]);
+
+  // Handle Login
+  const handleSuperAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (superAdminUser === 'admin' && superAdminPass === 'admin') {
+      setIsSuperAdminLoggedIn(true);
+      alert('Super Admin 登入成功！');
+    } else {
+      alert('帳號或密碼錯誤');
+    }
+  };
+
+  // If not authorized, show Login Screen
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-100">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-serif font-bold text-brand-900 mb-2">商家後台管理</h1>
+            <p className="text-brand-500 text-sm">請登入以繼續操作</p>
+          </div>
+
+          {/* LINE Login Option */}
+          <div className="mb-8 pb-8 border-b border-brand-100">
+            <h2 className="text-xs font-bold text-brand-400 uppercase mb-4 text-center">使用 LINE 帳號登入</h2>
+            {!isLoggedIn ? (
+              <button
+                onClick={login}
+                className="w-full bg-[#06C755] hover:bg-[#05b34c] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
+              >
+                <MessageCircle size={20} />
+                LINE 登入驗證
+              </button>
+            ) : (
+              <div className="text-center">
+                <img src={profile?.pictureUrl} alt={profile?.displayName} className="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-brand-200" />
+                <p className="text-brand-800 font-medium mb-1">{profile?.displayName}</p>
+                <p className="text-xs text-red-500 bg-red-50 py-1 px-3 rounded-full inline-block">此帳號無管理權限</p>
+                <p className="text-[10px] text-brand-400 mt-2">ID: {profile?.userId}</p>
+                <button onClick={() => window.location.reload()} className="mt-4 text-xs text-brand-500 underline">重新載入</button>
+              </div>
+            )}
+          </div>
+
+          {/* Super Admin Login Option */}
+          <form onSubmit={handleSuperAdminLogin}>
+            <h2 className="text-xs font-bold text-brand-400 uppercase mb-4 text-center">Super Admin 登入</h2>
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="帳號"
+                  value={superAdminUser}
+                  onChange={e => setSuperAdminUser(e.target.value)}
+                  className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  placeholder="密碼"
+                  value={superAdminPass}
+                  onChange={e => setSuperAdminPass(e.target.value)}
+                  className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm"
+              >
+                登入系統
+              </button>
+            </div>
+          </form>
+        </div>
+        <div className="mt-8 text-center text-[10px] text-brand-300">
+          MULE EYELASH STUDIO <br /> SYSTEM VER 1.2
+        </div>
+      </div>
+    );
+  }
+
 
   // --- PRODUCT FORM STATE ---
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -288,8 +387,10 @@ const Admin: React.FC = () => {
                           if (res.ok) {
                             alert(`已確認預約！\n\n已呼叫系統後端發送 LINE 通知給 ${customerName}。`);
                           } else {
-                            console.error('API Error:', res.statusText);
-                            alert('發送失敗 (請確認 Vercel 環境變數已設定 LINE_CHANNEL_ACCESS_TOKEN)');
+                            const errData = await res.json().catch(() => ({}));
+                            console.error('API Error:', res.status, errData);
+                            const errMsg = errData.error || res.statusText;
+                            alert(`發送失敗: ${errMsg}\n(若為 Server configuration error 請檢查 Vercel 環境變數並重新部署)`);
                           }
                         } catch (err) {
                           console.error('Notification Error:', err);
@@ -325,8 +426,10 @@ const Admin: React.FC = () => {
                             if (res.ok) {
                               alert(`已婉拒預約！\n\n已呼叫系統後端發送 LINE 通知。`);
                             } else {
-                              console.error('API Error:', res.statusText);
-                              alert('發送失敗 (請確認 Vercel 環境變數已設定 LINE_CHANNEL_ACCESS_TOKEN)');
+                              const errData = await res.json().catch(() => ({}));
+                              console.error('API Error:', res.status, errData);
+                              const errMsg = errData.error || res.statusText;
+                              alert(`發送失敗: ${errMsg}\n(若為 Server configuration error 請檢查 Vercel 環境變數並重新部署)`);
                             }
                           } catch (err) {
                             console.error('Notification Error:', err);
@@ -470,11 +573,11 @@ const Admin: React.FC = () => {
                               message: 'Test'
                             })
                           });
-                          // 400 means connected but invalid ID, which is good enough connection test
-                          if (res.ok || res.status === 400 || res.status === 500) {
-                            alert('後端連線正常! (若收到 500 請檢查 Vercel 環境變數)');
+                          if (res.ok) {
+                            alert('後端連線正常!');
                           } else {
-                            alert('連線失敗: ' + res.status);
+                            const errData = await res.json().catch(() => ({}));
+                            alert(`連線測試回應: ${res.status} ${errData.error || ''}\n(若為 500 Server configuration error 代表環境變數未讀取到)`);
                           }
                         } catch (e) {
                           alert('連線錯誤: ' + e);
@@ -486,6 +589,81 @@ const Admin: React.FC = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Admin Access Management (Only for Super Admin or currently logged in Admins) */}
+            <div className="pt-6 border-t border-brand-100 mb-8">
+              <label className="block text-xs font-bold text-brand-500 uppercase mb-4 flex items-center gap-2">
+                <User size={14} />
+                管理員權限設定 (LINE 帳號)
+              </label>
+
+              <div className="space-y-3">
+                {/* Add New Admin */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="輸入 LINE User ID (Uxxxxxxxx...)"
+                    className="flex-1 bg-white border border-brand-200 rounded-lg p-2 text-sm font-mono"
+                    id="newAdminIdInput"
+                  />
+                  <button
+                    onClick={() => {
+                      const input = document.getElementById('newAdminIdInput') as HTMLInputElement;
+                      const newId = input.value.trim();
+                      if (!newId) return;
+
+                      const currentIds = settings.adminIds || [];
+                      if (currentIds.includes(newId)) {
+                        alert('此 ID 已在管理員名單中');
+                        return;
+                      }
+
+                      updateSettings({ adminIds: [...currentIds, newId] });
+                      input.value = '';
+                    }}
+                    className="bg-brand-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-brand-900"
+                  >
+                    新增
+                  </button>
+                </div>
+
+                {/* Current Admins List */}
+                <div className="bg-white border border-brand-200 rounded-lg overflow-hidden">
+                  {(settings.adminIds || []).length === 0 ? (
+                    <div className="p-4 text-center text-xs text-brand-400">目前沒有設定任何 LINE 管理員</div>
+                  ) : (
+                    <ul className="divide-y divide-brand-100">
+                      {(settings.adminIds || []).map(id => (
+                        <li key={id} className="p-3 flex items-center justify-between hover:bg-brand-50">
+                          <span className="font-mono text-xs text-brand-600 truncate mr-2">{id}</span>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('確定要移除此管理員權限嗎？')) {
+                                updateSettings({ adminIds: settings.adminIds?.filter(aid => aid !== id) });
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-600 p-1"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Helper: Current User ID */}
+                {isLoggedIn && profile?.userId && (
+                  <div className="text-[10px] text-brand-400 flex items-center gap-1 mt-2">
+                    <span>您的 LINE ID:</span>
+                    <code className="bg-brand-50 px-1 rounded cursor-pointer select-all hover:text-brand-700" onClick={(e) => navigator.clipboard.writeText(e.currentTarget.innerText)}>
+                      {profile.userId}
+                    </code>
+                    <span className="text-brand-300">(點擊複製)</span>
+                  </div>
+                )}
               </div>
             </div>
 
