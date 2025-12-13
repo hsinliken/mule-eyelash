@@ -260,20 +260,47 @@ const Admin: React.FC = () => {
                 </div>
                 {apt.status === 'pending' && (
                   <div className="flex gap-2">
-                    <button onClick={() => {
+                    <button onClick={async () => {
+                      // 1. Update Status
                       updateAppointmentStatus(apt.id, 'confirmed');
-                      // Generate notification text
+
+                      // 2. Generate Notification Text
                       const customerName = apt.userInfo?.displayName || '貴賓';
                       const serviceName = getServiceName(apt.serviceId);
                       const msg = `您好 ${customerName}，\n感謝您的預約！\n\n項目：${serviceName}\n時間：${apt.date} ${apt.time}\n\n您的預約已確認完成，期待您的光臨！😊`;
 
-                      // Copy to clipboard
+                      // 3. Attempt to send via API
+                      if (apt.userInfo?.userId) {
+                        try {
+                          // Show loading indicator or just a toast? For now, standard alert after success.
+                          const res = await fetch('/api/send-line-push', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              to: apt.userInfo.userId,
+                              message: msg
+                            })
+                          });
+
+                          if (res.ok) {
+                            alert(`已確認預約！\n\nLINE 通知已自動發送給 ${customerName}。`);
+                            return; // Success, stop here.
+                          } else {
+                            console.error('Push Notification Failed:', await res.json());
+                          }
+                        } catch (err) {
+                          console.error('Network Error:', err);
+                        }
+                      }
+
+                      // 4. Fallback: Copy to clipboard if API fails or no userId
                       navigator.clipboard.writeText(msg).then(() => {
-                        alert('已確認預約！\n\n通知訊息已複製到剪貼簿，請至 LINE 官方帳號貼上回覆客人：\n\n' + msg);
+                        alert('已確認預約！\n\n(注意：自動發送失敗或無 User ID)\n通知訊息已複製到剪貼簿，請手動回覆。');
                       }).catch(() => {
-                        alert('已確認預約！\n\n(無法自動複製訊息，請手動輸入通知)');
+                        alert('已確認預約！\n\n(自動發送失敗，且無法複製訊息，請手動聯繫)');
                       });
-                    }} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">接受 & 複製通知</button>
+
+                    }} className="flex-1 bg-brand-800 text-white py-2 rounded-lg text-xs font-medium hover:bg-brand-900">確認 & 發送通知</button>
 
                     <button onClick={() => {
                       if (window.confirm('確定要婉拒此預約嗎？')) {
