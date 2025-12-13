@@ -15,7 +15,7 @@ enum BookingStep {
 
 const Booking: React.FC = () => {
   const { liffObject, isLoggedIn, profile } = useLiff();
-  const { addAppointment } = useBookings();
+  const { addAppointment, appointments } = useBookings();
   const { stylists } = useStylists();
 
   const [step, setStep] = useState<BookingStep>(BookingStep.SERVICE);
@@ -44,47 +44,32 @@ const Booking: React.FC = () => {
         return;
       }
 
-      // Generate slots every 30 mins between start and end time
+      // Generate slots every 120 mins (2 hours) between start and end time
       const times: string[] = [];
       let [startH, startM] = selectedStylist.workHours.start.split(':').map(Number);
       const [endH, endM] = selectedStylist.workHours.end.split(':').map(Number);
 
       let currentH = startH;
       let currentM = startM;
+      const endTotalMins = endH * 60 + endM;
 
-      while (currentH < endH || (currentH === endH && currentM < endM)) {
+      // Prevent booking too close to closing time (service duration)
+      // For 2hr fixed slots, we usually just strict to the slot start
+      // But we should check if (slotStart + duration) <= workEnd
+      const serviceDuration = selectedService?.duration || 60;
+
+      while ((currentH * 60 + currentM) + serviceDuration <= endTotalMins) {
         const timeStr = `${currentH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')}`;
         times.push(timeStr);
 
-        currentM += 90; // Suggesting 90 min slots roughly, or standard 30 min intervals
-        // Let's do 90 mins for better realistic booking or 30 mins choices? 
-        // Let's stick to 1.5 hour slots or 1 hour slots for simplicity, or just 30min intervals user picks start time.
-        // Reverting to 30 min intervals for flexibility.
-        currentM -= 60; // Reset logic for simple loop
-
-        // Simple loop for 30 min intervals
-        currentM += 30;
-        if (currentM >= 60) {
+        // Increment by 2 hours (120 minutes)
+        currentM += 120;
+        while (currentM >= 60) {
           currentH++;
           currentM -= 60;
         }
       }
-      // Re-generate properly
-      const slots = [];
-      let h = startH;
-      let m = startM;
-      const endTotalMins = endH * 60 + endM;
-
-      // Prevent booking too close to closing time (service duration)
-      const serviceDuration = selectedService?.duration || 60;
-
-      while ((h * 60 + m) + serviceDuration <= endTotalMins) {
-        slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-        m += 30;
-        if (m >= 60) { h++; m = 0; }
-      }
-
-      setGeneratedTimes(slots);
+      setGeneratedTimes(times);
     }
   }, [selectedDate, selectedStylist, selectedService]);
 
@@ -261,18 +246,33 @@ const Booking: React.FC = () => {
             <div className="animate-fade-in">
               <label className="block text-sm font-medium text-brand-700 mb-2">可預約時段</label>
               <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto no-scrollbar">
-                {generatedTimes.map(time => (
-                  <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${selectedTime === time
-                      ? 'bg-brand-800 text-white shadow-md'
-                      : 'bg-brand-50 text-brand-600 hover:bg-brand-100'
-                      }`}
-                  >
-                    {time}
-                  </button>
-                ))}
+                {generatedTimes.map(time => {
+                  // Check if this slot is already booked for this stylist and date
+                  // status !== 'cancelled' means it is active (pending or confirmed)
+                  const isBooked = appointments.some(apt =>
+                    apt.stylistId === selectedStylist?.id &&
+                    apt.date === selectedDate &&
+                    apt.time === time &&
+                    apt.status !== 'cancelled'
+                  );
+
+                  return (
+                    <button
+                      key={time}
+                      disabled={isBooked}
+                      onClick={() => setSelectedTime(time)}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${isBooked
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed decoration-slice' // Disabled style
+                        : selectedTime === time
+                          ? 'bg-brand-800 text-white shadow-md'
+                          : 'bg-brand-50 text-brand-600 hover:bg-brand-100'
+                        }`}
+                    >
+                      {time}
+                      {isBooked && <span className="block text-[10px] scale-90">(已預約)</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

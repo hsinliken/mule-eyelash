@@ -13,6 +13,7 @@ interface LiffContextType {
   liffObject: any;
   profile: Profile | null;
   isLoggedIn: boolean;
+  isInitialized: boolean;
   error: string | null;
   login: () => void;
   logout: () => void;
@@ -22,9 +23,10 @@ const LiffContext = createContext<LiffContextType>({
   liffObject: null,
   profile: null,
   isLoggedIn: false,
+  isInitialized: false,
   error: null,
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
 });
 
 export const useLiff = () => useContext(LiffContext);
@@ -36,6 +38,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMockMode, setIsMockMode] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const currentLiffId = settings.liffId;
@@ -44,6 +47,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!currentLiffId || currentLiffId === 'YOUR_LIFF_ID') {
       console.log('⚠️ LIFF ID 未設定，啟用模擬模式 (Mock Mode)。');
       setIsMockMode(true);
+      setIsInitialized(true);
       return;
     }
 
@@ -65,6 +69,9 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError(err.message);
         // 若初始化失敗（例如網路問題或 ID 錯誤），也切換回模擬模式以免 App 當掉
         setIsMockMode(true);
+      })
+      .finally(() => {
+        setIsInitialized(true);
       });
   }, [settings.liffId]); // 當設定中的 LIFF ID 改變時重新執行
 
@@ -74,8 +81,8 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (isMockMode || isInIframe) {
       if (isInIframe && !isMockMode) {
-         console.warn("Detected iframe environment. LINE Login does not support iframes. Falling back to Mock Mode.");
-         alert("【環境限制提示】\nLINE 官方基於安全考量，禁止在 Iframe (預覽視窗) 中進行登入。\n\n系統將自動切換為「模擬登入」模式供您測試。\n若需測試真實登入，請點擊編輯器右上角的「Open in New Tab」在新視窗開啟網頁。");
+        console.warn("Detected iframe environment. LINE Login does not support iframes. Falling back to Mock Mode.");
+        alert("【環境限制提示】\nLINE 官方基於安全考量，禁止在 Iframe (預覽視窗) 中進行登入。\n\n系統將自動切換為「模擬登入」模式供您測試。\n若需測試真實登入，請點擊編輯器右上角的「Open in New Tab」在新視窗開啟網頁。");
       }
 
       // --- 模擬登入行為 ---
@@ -88,7 +95,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setProfile(mockProfile);
       setIsLoggedIn(true);
-      
+
       if (isMockMode) {
         alert('【開發模式提示】\n您已成功模擬登入！\n目前使用 LIFF ID: ' + settings.liffId);
       }
@@ -122,7 +129,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <LiffContext.Provider value={{ liffObject, profile, isLoggedIn, error, login, logout }}>
+    <LiffContext.Provider value={{ liffObject, profile, isLoggedIn, isInitialized, error, login, logout }}>
       {children}
     </LiffContext.Provider>
   );

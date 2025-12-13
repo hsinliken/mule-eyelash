@@ -29,6 +29,27 @@ const ScrollToTop = () => {
   return null;
 };
 
+const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isLoggedIn, isInitialized, login } = useLiff();
+
+  React.useEffect(() => {
+    if (isInitialized && !isLoggedIn) {
+      login();
+    }
+  }, [isInitialized, isLoggedIn, login]);
+
+  if (!isInitialized || !isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 text-sm tracking-wider">LINE 登入中...</p>
+      </div>
+    );
+  }
+
+  return children;
+};
+
 const App: React.FC = () => {
   return (
     <ShopProvider>
@@ -42,24 +63,22 @@ const App: React.FC = () => {
                     <OrderProvider>
                       <Router>
                         <ScrollToTop />
-                        {/* 
-                          Container setup to emulate a mobile app view on larger screens.
-                          Background color set to brand off-white.
-                        */}
-                        <div className="min-h-screen bg-gray-100 flex justify-center">
-                          <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
-                            <Routes>
-                              <Route path="/" element={<Home />} />
-                              <Route path="/booking" element={<Booking />} />
-                              <Route path="/shop" element={<Shop />} />
-                              <Route path="/cart" element={<Cart />} />
-                              <Route path="/checkout" element={<Checkout />} />
-                              <Route path="/profile" element={<Profile />} />
-                              <Route path="/admin" element={<Admin />} />
-                            </Routes>
-                            <BottomNav />
+                        <RequireAuth>
+                          <div className="min-h-screen bg-gray-100 flex justify-center">
+                            <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
+                              <Routes>
+                                <Route path="/" element={<Home />} />
+                                <Route path="/booking" element={<Booking />} />
+                                <Route path="/shop" element={<Shop />} />
+                                <Route path="/cart" element={<Cart />} />
+                                <Route path="/checkout" element={<Checkout />} />
+                                <Route path="/profile" element={<Profile />} />
+                                <Route path="/admin" element={<Admin />} />
+                              </Routes>
+                              <BottomNav />
+                            </div>
                           </div>
-                        </div>
+                        </RequireAuth>
                       </Router>
                     </OrderProvider>
                   </CartProvider>
