@@ -43,8 +43,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addAppointment = async (aptData: Omit<Appointment, 'id' | 'status'>) => {
     try {
+      // Remove undefined fields to prevent Firestore errors
+      const safeData = JSON.parse(JSON.stringify(aptData));
+
       await addDoc(collection(db, 'bookings'), {
-        ...aptData,
+        ...safeData,
         status: 'pending', // 預設為待確認
         createdAt: new Date().toISOString()
       });
