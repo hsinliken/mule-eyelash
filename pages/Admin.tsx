@@ -881,7 +881,7 @@ const Admin: React.FC = () => {
                     沒有符合條件的訂單。
                   </div>
                 ) : (
-                  filteredOrders.map(order => (
+                  (filteredOrders || []).map(order => (
                     <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-brand-100 mb-3">
                       <div className="flex justify-between items-start border-b border-brand-50 pb-3 mb-3">
                         <div>
@@ -975,7 +975,7 @@ const Admin: React.FC = () => {
                         <button
                           key={type}
                           onClick={() => toggleSpecialty(type as any)}
-                          className={`px-3 py-1 rounded-full text-xs border ${stylistForm.specialties.includes(type as any) ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-brand-400 border-brand-200'}`}
+                          className={`px-3 py-1 rounded-full text-xs border ${(stylistForm.specialties || []).includes(type as any) ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-brand-400 border-brand-200'}`}
                         >
                           {type === 'Lash' ? '美睫' : type === 'Brow' ? '美眉' : type === 'Lip' ? '美唇' : '保養'}
                         </button>
@@ -997,7 +997,7 @@ const Admin: React.FC = () => {
                         <button
                           key={idx}
                           onClick={() => toggleWorkDay(idx)}
-                          className={`w-8 h-8 rounded-full text-xs font-medium border ${stylistForm.workDays.includes(idx) ? 'bg-brand-800 text-white border-brand-800' : 'bg-white text-brand-300 border-brand-100'}`}
+                          className={`w-8 h-8 rounded-full text-xs font-medium border ${(stylistForm.workDays || []).includes(idx) ? 'bg-brand-800 text-white border-brand-800' : 'bg-white text-brand-300 border-brand-100'}`}
                         >
                           {day}
                         </button>
@@ -1011,7 +1011,7 @@ const Admin: React.FC = () => {
               </div>
             )}
             <div className="space-y-3">
-              {stylists.map(stylist => (
+              {(stylists || []).map(stylist => (
                 <div key={stylist.id} className="bg-white p-3 rounded-xl border border-brand-100 shadow-sm flex items-start gap-3">
                   <div className="w-14 h-14 bg-gray-100 rounded-full overflow-hidden shrink-0 border border-brand-50">
                     <img src={stylist.image} alt={stylist.name} className="w-full h-full object-cover" />
@@ -1028,7 +1028,7 @@ const Admin: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2 mb-2">
-                      {stylist.specialties.map(s => (
+                      {(stylist.specialties || []).map(s => (
                         <span key={s} className="text-[10px] bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded border border-brand-100">
                           {s === 'Lash' ? '美睫' : s === 'Brow' ? '美眉' : s === 'Lip' ? '美唇' : '保養'}
                         </span>
@@ -1087,7 +1087,7 @@ const Admin: React.FC = () => {
               </div>
             )}
             <div className="space-y-3">
-              {products.map(product => (
+              {(products || []).map(product => (
                 <div key={product.id} className="bg-white p-3 rounded-xl border border-brand-100 shadow-sm flex items-center gap-3">
                   <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                     <img src={product.image} alt={product.name} className={`w-full h-full object-cover ${!product.inStock ? 'opacity-50' : ''}`} />
@@ -1171,7 +1171,7 @@ const Admin: React.FC = () => {
             )}
 
             <div className="space-y-4">
-              {promotions.map(promo => (
+              {(promotions || []).map(promo => (
                 <div key={promo.id} className={`bg-white p-4 rounded-xl border ${promo.active ? 'border-brand-100' : 'border-gray-100 bg-gray-50'} shadow-sm`}>
                   <div className="flex gap-4">
                     <div className="w-24 aspect-video bg-gray-200 rounded-lg overflow-hidden shrink-0">
@@ -1257,7 +1257,7 @@ const Admin: React.FC = () => {
 
             {/* Image Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {galleryImages.map(img => (
+              {(galleryImages || []).map(img => (
                 <div key={img.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border border-brand-200 shadow-sm hover:shadow-md transition-all">
                   <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 p-4">
@@ -1283,7 +1283,7 @@ const Admin: React.FC = () => {
                 </div>
               ))}
             </div>
-            {galleryImages.length === 0 && (
+            {(galleryImages || []).length === 0 && (
               <div className="text-center text-brand-400 text-sm py-12 bg-brand-50 rounded-xl border border-brand-100 border-dashed">
                 目前還沒有圖片，試著上傳第一張吧！
               </div>
