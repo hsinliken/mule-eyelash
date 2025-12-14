@@ -439,15 +439,36 @@ const Admin: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-brand-500 uppercase mb-2">Logo 圖片連結</label>
                 <div className="flex gap-4 items-start">
-                  <div className="flex-1">
+                  <div className="flex-1 relative">
                     <input
                       type="text"
                       value={settingsForm.logo}
                       onChange={e => setSettingsForm({ ...settingsForm, logo: e.target.value })}
                       placeholder="https://..."
-                      className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm"
+                      className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 pr-20 text-sm"
                     />
-                    <p className="text-[10px] text-brand-400 mt-1">請輸入 Logo 的圖片網址。</p>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('upload-logo')?.click()}
+                      disabled={isGalleryLoading}
+                      className="absolute right-2 top-2 bottom-2 px-3 bg-white border border-brand-200 text-brand-600 text-xs rounded-md hover:bg-brand-50 disabled:opacity-50"
+                    >
+                      {isGalleryLoading ? '...' : '上傳'}
+                    </button>
+                    <input
+                      type="file"
+                      id="upload-logo"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          uploadImage(e.target.files[0])
+                            .then(url => setSettingsForm(prev => ({ ...prev, logo: url })))
+                            .catch(err => alert('上傳失敗: ' + err));
+                        }
+                      }}
+                    />
+                    <p className="text-[10px] text-brand-400 mt-1">請輸入 Logo 的圖片網址或直接上傳。</p>
                   </div>
                   <div className="w-20 h-20 bg-brand-50 border border-brand-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                     {settingsForm.logo ? (
