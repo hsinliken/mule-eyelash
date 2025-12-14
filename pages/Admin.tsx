@@ -930,8 +930,29 @@ const Admin: React.FC = () => {
                           type="text"
                           value={stylistForm.image}
                           onChange={e => setStylistForm({ ...stylistForm, image: e.target.value })}
-                          className="w-full bg-brand-50 border border-brand-200 rounded-lg p-2 pl-9 text-sm"
+                          className="w-full bg-brand-50 border border-brand-200 rounded-lg p-2 pl-9 pr-20 text-sm"
                           placeholder="https://..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('upload-stylist')?.click()}
+                          disabled={isGalleryLoading}
+                          className="absolute right-1 top-1 bottom-1 px-3 bg-white border border-brand-200 text-brand-600 text-xs rounded-md hover:bg-brand-50 disabled:opacity-50"
+                        >
+                          {isGalleryLoading ? '...' : '上傳'}
+                        </button>
+                        <input
+                          type="file"
+                          id="upload-stylist"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              uploadImage(e.target.files[0])
+                                .then(url => setStylistForm(prev => ({ ...prev, image: url })))
+                                .catch(err => alert('上傳失敗: ' + err));
+                            }
+                          }}
                         />
                       </div>
                       <div className="w-10 h-10 rounded-full bg-brand-50 overflow-hidden border border-brand-200 shrink-0">
@@ -1049,7 +1070,36 @@ const Admin: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-brand-500 uppercase mb-1">圖片</label>
-                    <input type="text" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm" />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={productForm.image}
+                        onChange={e => setProductForm({ ...productForm, image: e.target.value })}
+                        className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 pr-20 text-sm"
+                        placeholder="圖片連結..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('upload-product')?.click()}
+                        disabled={isGalleryLoading}
+                        className="absolute right-2 top-2 bottom-2 px-3 bg-white border border-brand-200 text-brand-600 text-xs rounded-md hover:bg-brand-50 disabled:opacity-50"
+                      >
+                        {isGalleryLoading ? '...' : '上傳'}
+                      </button>
+                      <input
+                        type="file"
+                        id="upload-product"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            uploadImage(e.target.files[0])
+                              .then(url => setProductForm(prev => ({ ...prev, image: url })))
+                              .catch(err => alert('上傳失敗: ' + err));
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                   <button onClick={handleSaveProduct} className="w-full bg-brand-800 text-white py-3 rounded-xl font-medium flex justify-center items-center gap-2 shadow-lg shadow-brand-200 mt-2">
                     <Save size={18} /> 儲存商品
@@ -1125,7 +1175,28 @@ const Admin: React.FC = () => {
                           type="text"
                           value={promoForm.image}
                           onChange={e => setPromoForm({ ...promoForm, image: e.target.value })}
-                          className="w-full bg-brand-50 border border-brand-200 rounded-lg p-2 pl-9 text-sm"
+                          className="w-full bg-brand-50 border border-brand-200 rounded-lg p-2 pl-9 pr-20 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('upload-promo')?.click()}
+                          disabled={isGalleryLoading}
+                          className="absolute right-1 top-1 bottom-1 px-3 bg-white border border-brand-200 text-brand-600 text-xs rounded-md hover:bg-brand-50 disabled:opacity-50"
+                        >
+                          {isGalleryLoading ? '...' : '上傳'}
+                        </button>
+                        <input
+                          type="file"
+                          id="upload-promo"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              uploadImage(e.target.files[0])
+                                .then(url => setPromoForm(prev => ({ ...prev, image: url })))
+                                .catch(err => alert('上傳失敗: ' + err));
+                            }
+                          }}
                         />
                       </div>
                       <div className="w-16 h-10 rounded-lg bg-brand-50 overflow-hidden border border-brand-200 shrink-0">
