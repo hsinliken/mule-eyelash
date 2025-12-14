@@ -302,6 +302,9 @@ const Admin: React.FC = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-brand-50/30">
+      {/* DEBUG HEADER */}
+      <div className="bg-red-500 text-white text-xs p-1 text-center">系统載入成功 - Admin Dashboard</div>
+
       {/* Sticky Container for Header and Tabs - Increased Z-index */}
       <div className="sticky top-0 z-40 w-full shadow-md bg-brand-50">
         <div className="bg-brand-900 text-white p-6 flex justify-between items-center relative z-20">
@@ -338,8 +341,8 @@ const Admin: React.FC = () => {
         {/* BOOKINGS TAB */}
         {activeTab === 'bookings' && (
           <div className="space-y-4">
-            {appointments.length === 0 && <div className="text-center text-brand-400 py-10">尚無預約。</div>}
-            {appointments.map(apt => (
+            {(appointments || []).length === 0 && <div className="text-center text-brand-400 py-10">尚無預約。</div>}
+            {(appointments || []).map(apt => (
               <div key={apt.id} className="bg-white p-4 rounded-xl shadow-sm border border-brand-100">
                 <div className="flex justify-between items-start mb-3">
                   <div>
