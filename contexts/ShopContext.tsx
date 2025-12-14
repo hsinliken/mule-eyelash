@@ -63,7 +63,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { doc, setDoc } = await import('firebase/firestore');
       const settingsRef = doc(db, 'shop', 'settings');
       await setDoc(settingsRef, newSettings, { merge: true });
-    } catch (error) {
     } catch (error: any) {
       console.error("Failed to save settings:", error);
       alert(`設定儲存失敗: ${error.message || error.code || error}\n請檢查 Firebase Console 的 Firestore Rules 是否有開啟寫入權限。`);
