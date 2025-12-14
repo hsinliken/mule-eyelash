@@ -38,8 +38,7 @@ const Admin: React.FC = () => {
     if (isLoggedIn && profile?.userId && settings.adminIds?.includes(profile.userId)) return true;
 
     // [TEMPORARY FIX] Bypass Auth for debugging
-    return true;
-    // return false;
+    return false;
   }, [isSuperAdminLoggedIn, isLoggedIn, profile, settings.adminIds]);
 
   // Handle Login
