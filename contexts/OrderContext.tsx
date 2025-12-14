@@ -1,87 +1,78 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus } from '../types';
+import { db } from '../firebase';
+import { collection, onSnapshot, addDoc, updateDoc, doc, query, orderBy, setDoc } from 'firebase/firestore';
 
 interface OrderContextType {
   orders: Order[];
-  createOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => string;
-  updateOrderStatus: (id: string, status: OrderStatus, trackingNumber?: string) => void;
-  updateOrder: (id: string, updates: Partial<Order>) => void;
+  createOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<string>;
+  updateOrderStatus: (id: string, status: OrderStatus, trackingNumber?: string) => Promise<void>;
+  updateOrder: (id: string, updates: Partial<Order>) => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType>({
   orders: [],
-  createOrder: () => '',
-  updateOrderStatus: () => {},
-  updateOrder: () => {},
+  createOrder: async () => '',
+  updateOrderStatus: async () => { },
+  updateOrder: async () => { },
 });
 
 export const useOrders = () => useContext(OrderContext);
 
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [orders, setOrders] = useState<Order[]>([
-    // Mock initial order
-    {
-      id: 'ord_mock_1',
-      items: [
-        {
-           id: 'p1',
-           name: 'Mule Lash Serum',
-           price: 1280,
-           description: 'Nourish your natural lashes...',
-           image: 'https://picsum.photos/id/21/500/500',
-           inStock: true,
-           quantity: 1
-        }
-      ],
-      totalAmount: 1280,
-      customer: {
-        name: 'Sarah Chen',
-        phone: '0912345678',
-        email: 'sarah@example.com'
-      },
-      delivery: {
-        method: 'home_delivery',
-        address: 'Taipei City, Xinyi Dist...',
-        trackingNumber: 'TW123456789'
-      },
-      payment: {
-        method: 'credit_card',
-        isPaid: true
-      },
-      status: 'shipped',
-      createdAt: new Date(Date.now() - 86400000).toISOString()
-    }
-  ]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  const createOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>): string => {
+  // 1. Subscribe to Orders from Firestore
+  useEffect(() => {
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedOrders = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Order));
+      setOrders(loadedOrders);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Create Order (Add to Firestore)
+  const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>): Promise<string> => {
+    // We let Firestore generate the ID, or we can create a custom one. 
+    // For simplicity, let's use addDoc which auto-generates IDs, 
+    // but the user's previous code generated a custom ID. 
+    // Use Firestore auto-ID to be safe, or setDoc with custom ID.
+    // Let's stick to the previous ID format `ord_timestamp` for readability, but use setDoc.
+
     const newId = `ord_${Date.now()}`;
     const newOrder: Order = {
       ...orderData,
       id: newId,
-      status: 'pending', // Default status
+      status: 'pending',
       createdAt: new Date().toISOString(),
     };
-    setOrders(prev => [newOrder, ...prev]);
-    return newId; // Return the ID so Checkout page can show it
+
+    const orderRef = doc(db, 'orders', newId);
+    await setDoc(orderRef, newOrder);
+    return newId;
   };
 
-  const updateOrderStatus = (id: string, status: OrderStatus, trackingNumber?: string) => {
-    setOrders(prev => prev.map(order => {
-      if (order.id === id) {
-        return {
-          ...order,
-          status,
-          delivery: trackingNumber ? { ...order.delivery, trackingNumber } : order.delivery
-        };
-      }
-      return order;
-    }));
+  // 3. Update Order Status
+  const updateOrderStatus = async (id: string, status: OrderStatus, trackingNumber?: string) => {
+    const orderRef = doc(db, 'orders', id);
+    const updates: any = { status };
+    if (trackingNumber) {
+      // Logic to merge into delivery object requires reading first or dot notation if structured well
+      // Simple approach: we just update status here mostly.
+      // If we need to update nested fields like 'delivery.trackingNumber', dot notation works:
+      updates['delivery.trackingNumber'] = trackingNumber;
+    }
+    await updateDoc(orderRef, updates);
   };
 
-  const updateOrder = (id: string, updates: Partial<Order>) => {
-    setOrders(prev => prev.map(order => 
-      order.id === id ? { ...order, ...updates } : order
-    ));
+  // 4. Update Generic Order Fields
+  const updateOrder = async (id: string, updates: Partial<Order>) => {
+    const orderRef = doc(db, 'orders', id);
+    await updateDoc(orderRef, updates);
   };
 
   return (
