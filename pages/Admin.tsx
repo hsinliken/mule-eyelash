@@ -57,6 +57,10 @@ const Admin: React.FC = () => {
     return (
       <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-100">
+          {/* Debug Info */}
+          <div className="mb-4 p-2 bg-gray-100 text-[10px] text-gray-500 rounded overflow-hidden">
+            Debug: Loaded Admin IDs: {(settings.adminIds || []).join(', ') || 'None'}
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-2xl font-serif font-bold text-brand-900 mb-2">商家後台管理</h1>
             <p className="text-brand-500 text-sm">請登入以繼續操作</p>

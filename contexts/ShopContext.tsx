@@ -23,15 +23,50 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [settings, setSettings] = useState<ShopSettings>({
     name: 'MULE EYELASH',
     subtitle: 'STUDIO',
-    logo: 'https://cdn-icons-png.flaticon.com/512/3163/3163219.png', // 預設暫時圖示
-    lineId: 'https://lin.ee/BpNFDWqS', // 預設商家 LINE 連結
-    liffId: '2008685421-wjbyqf1k', // 預設 LIFF ID
-    makeWebhookUrl: '', // 預設 Make Webhook URL
-    adminIds: [] // 初始管理員列表为空
+    logo: 'https://cdn-icons-png.flaticon.com/512/3163/3163219.png',
+    lineId: 'https://lin.ee/BpNFDWqS',
+    liffId: '2008685421-wjbyqf1k',
+    makeWebhookUrl: '',
+    adminIds: []
   });
 
-  const updateSettings = (newSettings: Partial<ShopSettings>) => {
+  // Load Settings from Firestore
+  useEffect(() => {
+    import('../firebase').then(({ db }) => {
+      import('firebase/firestore').then(({ doc, onSnapshot, setDoc, getDoc }) => {
+        const settingsRef = doc(db, 'shop', 'settings');
+
+        // Ensure document exists
+        getDoc(settingsRef).then((snap) => {
+          if (!snap.exists()) {
+            setDoc(settingsRef, settings); // Initialize with defaults if missing
+          }
+        });
+
+        const unsubscribe = onSnapshot(settingsRef, (doc) => {
+          if (doc.exists()) {
+            setSettings(prev => ({ ...prev, ...doc.data() }));
+          }
+        });
+        return unsubscribe;
+      });
+    });
+  }, []); // Run once on mount
+
+  const updateSettings = async (newSettings: Partial<ShopSettings>) => {
+    // Optimistic update
     setSettings(prev => ({ ...prev, ...newSettings }));
+
+    // Write to Firestore
+    try {
+      const { db } = await import('../firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+      const settingsRef = doc(db, 'shop', 'settings');
+      await setDoc(settingsRef, newSettings, { merge: true });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("設定儲存失敗，請檢查網路連線");
+    }
   };
 
   return (
