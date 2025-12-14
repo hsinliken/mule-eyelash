@@ -24,7 +24,7 @@ const Admin: React.FC = () => {
   const { images: galleryImages, uploadImage, isLoading: isGalleryLoading, deleteImage } = useGallery();
 
 
-  const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings' | 'gallery'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings' | 'gallery'>('settings');
 
   // --- AUTH STATE ---
   const [superAdminUser, setSuperAdminUser] = useState('');
