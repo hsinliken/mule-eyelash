@@ -54,19 +54,43 @@ const Admin: React.FC = () => {
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-brand-100">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-serif font-bold text-brand-900 mb-2">商家後台管理</h1>
-            className="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm"
-              >
-            登入系統
-          </button>
+            <p className="text-brand-500 text-sm">請輸入管理員帳號密碼</p>
+          </div>
+
+          <form onSubmit={handleSuperAdminLogin} className="space-y-4">
+            <div>
+              <input
+                type="text"
+                placeholder="帳號"
+                value={superAdminUser}
+                onChange={e => setSuperAdminUser(e.target.value)}
+                className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="密碼"
+                value={superAdminPass}
+                onChange={e => setSuperAdminPass(e.target.value)}
+                className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm"
+            >
+              登入系統
+            </button>
+          </form>
         </div>
-      </form>
-        </div >
-  <div className="mt-8 text-center text-[10px] text-brand-300">
-    MULE EYELASH STUDIO <br /> SYSTEM VER 1.2
-  </div>
-      </div >
+        <div className="mt-8 text-center text-[10px] text-brand-300">
+          MULE EYELASH STUDIO <br /> SYSTEM VER 1.2
+        </div>
+      </div>
     );
   }
+}
 
 
 // --- PRODUCT FORM STATE ---
