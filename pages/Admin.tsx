@@ -41,7 +41,7 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (superAdminUser === 'admin' && superAdminPass === 'admin') {
       setIsSuperAdminLoggedIn(true);
-      alert('Super Admin 登入成功！');
+
     } else {
       alert('帳號或密碼錯誤');
     }
