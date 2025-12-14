@@ -42,10 +42,13 @@ const Checkout: React.FC = () => {
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (items.length === 0 && step !== 'success') {
+    // Don't redirect if we are submitting or have finished
+    if (loading || step === 'success') return;
+
+    if (items.length === 0) {
       navigate('/shop');
     }
-  }, [items, navigate, step]);
+  }, [items, navigate, step, loading]);
 
   const currentDeliveryFee = formData.deliveryMethod === 'home_delivery' ? DELIVERY_FEE_HOME : DELIVERY_FEE_STORE;
   const finalTotal = totalAmount + currentDeliveryFee;
@@ -83,9 +86,13 @@ const Checkout: React.FC = () => {
         }
       });
 
+      // Update state in specific order
       setCreatedOrderId(orderId);
+      setStep('success'); // Switch to success view immediately
+
+      // Clear cart
       clearCart();
-      setStep('success');
+
       window.scrollTo(0, 0);
     } catch (error) {
       console.error(error);
@@ -118,7 +125,7 @@ const Checkout: React.FC = () => {
 
         <div className="bg-brand-50 rounded-xl p-4 w-full mb-8 border border-brand-100">
           <p className="text-xs text-brand-400 uppercase tracking-wider mb-1">訂單編號</p>
-          <p className="text-lg font-mono font-medium text-brand-800">#{createdOrderId.slice(-6)}</p>
+          <p className="text-lg font-mono font-medium text-brand-800">#{createdOrderId ? createdOrderId.slice(-6) : '......'}</p>
         </div>
 
         <button
@@ -194,8 +201,8 @@ const Checkout: React.FC = () => {
             <button
               onClick={() => setFormData({ ...formData, deliveryMethod: 'home_delivery' })}
               className={`p-3 rounded-xl border text-left transition-all duration-200 ${formData.deliveryMethod === 'home_delivery'
-                  ? 'border-brand-500 bg-brand-50 text-brand-800 ring-1 ring-brand-500'
-                  : 'border-brand-100 text-brand-400 hover:bg-brand-50'
+                ? 'border-brand-500 bg-brand-50 text-brand-800 ring-1 ring-brand-500'
+                : 'border-brand-100 text-brand-400 hover:bg-brand-50'
                 }`}
             >
               <div className="text-sm font-bold mb-1">宅配到府</div>
@@ -204,8 +211,8 @@ const Checkout: React.FC = () => {
             <button
               onClick={() => setFormData({ ...formData, deliveryMethod: 'convenience_store' })}
               className={`p-3 rounded-xl border text-left transition-all duration-200 ${formData.deliveryMethod === 'convenience_store'
-                  ? 'border-brand-500 bg-brand-50 text-brand-800 ring-1 ring-brand-500'
-                  : 'border-brand-100 text-brand-400 hover:bg-brand-50'
+                ? 'border-brand-500 bg-brand-50 text-brand-800 ring-1 ring-brand-500'
+                : 'border-brand-100 text-brand-400 hover:bg-brand-50'
                 }`}
             >
               <div className="text-sm font-bold mb-1">超商取貨</div>
@@ -254,8 +261,8 @@ const Checkout: React.FC = () => {
           <div className="space-y-2">
             {['credit_card', 'line_pay', 'transfer'].map((method) => (
               <label key={method} className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === method
-                  ? 'border-brand-500 bg-brand-50'
-                  : 'border-brand-100 hover:bg-brand-50'
+                ? 'border-brand-500 bg-brand-50'
+                : 'border-brand-100 hover:bg-brand-50'
                 }`}>
                 <input
                   type="radio"
