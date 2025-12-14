@@ -31,7 +31,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lineId: 'https://lin.ee/BpNFDWqS',
     liffId: '2008685421-wjbyqf1k',
     makeWebhookUrl: '',
-    adminIds: []
+    adminIds: ['U3339e986a2680ec5f57bd32ac81204d1']
   });
 
   // Load Settings from Firestore
