@@ -17,6 +17,7 @@ import { StylistProvider } from './contexts/StylistContext';
 import { PromotionProvider } from './contexts/PromotionContext';
 import { ShopProvider } from './contexts/ShopContext';
 import { GalleryProvider } from './contexts/GalleryContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Scroll to top on route change wrapper
 const ScrollToTop = () => {
@@ -67,43 +68,52 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 const App: React.FC = () => {
   return (
-    <ShopProvider>
-      <LiffProvider>
-        <GalleryProvider>
-          <ProductProvider>
-            <StylistProvider>
-              <PromotionProvider>
-                <BookingProvider>
-                  <CartProvider>
-                    <OrderProvider>
-                      <Router>
-                        <ScrollToTop />
-                        <RequireAuth>
-                          <div className="min-h-screen bg-gray-100 flex justify-center">
-                            <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
-                              <Routes>
-                                <Route path="/" element={<Home />} />
-                                <Route path="/booking" element={<Booking />} />
-                                <Route path="/shop" element={<Shop />} />
-                                <Route path="/cart" element={<Cart />} />
-                                <Route path="/checkout" element={<Checkout />} />
-                                <Route path="/profile" element={<Profile />} />
-                                <Route path="/admin" element={<Admin />} />
-                              </Routes>
-                              <BottomNav />
-                            </div>
-                          </div>
-                        </RequireAuth>
-                      </Router>
-                    </OrderProvider>
-                  </CartProvider>
-                </BookingProvider>
-              </PromotionProvider>
-            </StylistProvider>
-          </ProductProvider>
-        </GalleryProvider>
-      </LiffProvider>
-    </ShopProvider>
+    <AuthProvider>
+      <ShopProvider>
+        <LiffProvider>
+          <GalleryProvider>
+            <ProductProvider>
+              <StylistProvider>
+                <PromotionProvider>
+                  <BookingProvider>
+                    <CartProvider>
+                      <OrderProvider>
+                        <Router>
+                          <ScrollToTop />
+                          <Routes>
+                            {/* Admin 使用獨立的 Firebase Auth，不需要 LINE Login */}
+                            <Route path="/admin" element={<Admin />} />
+
+                            {/* 其他需要 LINE Login 的路由 */}
+                            <Route path="/*" element={
+                              <RequireAuth>
+                                <div className="min-h-screen bg-gray-100 flex justify-center">
+                                  <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
+                                    <Routes>
+                                      <Route path="/" element={<Home />} />
+                                      <Route path="/booking" element={<Booking />} />
+                                      <Route path="/shop" element={<Shop />} />
+                                      <Route path="/cart" element={<Cart />} />
+                                      <Route path="/checkout" element={<Checkout />} />
+                                      <Route path="/profile" element={<Profile />} />
+                                    </Routes>
+                                    <BottomNav />
+                                  </div>
+                                </div>
+                              </RequireAuth>
+                            } />
+                          </Routes>
+                        </Router>
+                      </OrderProvider>
+                    </CartProvider>
+                  </BookingProvider>
+                </PromotionProvider>
+              </StylistProvider>
+            </ProductProvider>
+          </GalleryProvider>
+        </LiffProvider>
+      </ShopProvider>
+    </AuthProvider>
   );
 };
 

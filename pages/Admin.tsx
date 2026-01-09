@@ -6,15 +6,16 @@ import { useStylists } from '../contexts/StylistContext';
 import { usePromotions } from '../contexts/PromotionContext';
 import { useShop } from '../contexts/ShopContext';
 import { useGallery } from '../contexts/GalleryContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Product, Stylist, Promotion, Order, OrderStatus } from '../types';
 import { SERVICES } from '../constants';
-import { Plus, Edit2, Trash2, X, Save, Package, Truck, Check, User, Calendar, Clock, ImageIcon, Tag, FileText, Download, MapPin, CreditCard, DollarSign, Filter, RefreshCcw, Settings as SettingsIcon, BookOpen, MessageCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Save, Package, Truck, Check, User, Calendar, Clock, ImageIcon, Tag, FileText, Download, MapPin, CreditCard, DollarSign, Filter, RefreshCcw, Settings as SettingsIcon, BookOpen, MessageCircle, LogOut } from 'lucide-react';
 import { DEV_SPEC_MD, USER_MANUAL_MD } from '../docs';
 
 import { useLiff } from '../contexts/LiffContext';
 
 const Admin: React.FC = () => {
-  const { isLoggedIn, profile, login } = useLiff();
+  const { isLoggedIn, profile, login: liffLogin } = useLiff();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { appointments, updateAppointmentStatus } = useBookings();
   const { orders, updateOrder } = useOrders();
@@ -26,24 +27,27 @@ const Admin: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'bookings' | 'stylists' | 'products' | 'orders' | 'promotions' | 'docs' | 'settings' | 'gallery'>('settings');
 
-  // --- AUTH STATE ---
-  const [superAdminUser, setSuperAdminUser] = useState('');
-  const [superAdminPass, setSuperAdminPass] = useState('');
-  const [isSuperAdminLoggedIn, setIsSuperAdminLoggedIn] = useState(false);
+  // --- AUTH STATE (Firebase Auth) ---
+  const { isAuthenticated, isLoading: isAuthLoading, login: adminLogin, logout } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const isAuthorized = React.useMemo(() => {
-    // Only allow Super Admin (Password) login
-    return isSuperAdminLoggedIn;
-  }, [isSuperAdminLoggedIn]);
+  const isAuthorized = isAuthenticated;
 
-  // Handle Login
-  const handleSuperAdminLogin = (e: React.FormEvent) => {
+  // Handle Login with Firebase Auth
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (superAdminUser === 'admin' && superAdminPass === 'admin') {
-      setIsSuperAdminLoggedIn(true);
+    setLoginError('');
+    setIsLoggingIn(true);
 
-    } else {
-      alert('帳號或密碼錯誤');
+    try {
+      await adminLogin(email, password);
+    } catch (error: any) {
+      setLoginError(error.message || '登入失敗');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -227,6 +231,16 @@ const Admin: React.FC = () => {
     { id: 'docs', label: '手冊' },
   ];
 
+  // 認證載入中
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-brand-500 text-sm">載入中...</p>
+      </div>
+    );
+  }
+
   // If not authorized, show Login Screen (Must be after all hooks)
   if (!isAuthorized) {
     return (
@@ -237,35 +251,43 @@ const Admin: React.FC = () => {
             <p className="text-brand-500 text-sm">請輸入管理員帳號密碼</p>
           </div>
 
-          <form onSubmit={handleSuperAdminLogin} className="space-y-4">
+          <form onSubmit={handleAdminLogin} className="space-y-4">
             <div>
               <input
-                type="text"
-                placeholder="帳號"
-                value={superAdminUser}
-                onChange={e => setSuperAdminUser(e.target.value)}
+                type="email"
+                placeholder="電子郵件"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                disabled={isLoggingIn}
               />
             </div>
             <div>
               <input
                 type="password"
                 placeholder="密碼"
-                value={superAdminPass}
-                onChange={e => setSuperAdminPass(e.target.value)}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
                 className="w-full bg-brand-50 border border-brand-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                disabled={isLoggingIn}
               />
             </div>
+            {loginError && (
+              <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
+                {loginError}
+              </div>
+            )}
             <button
               type="submit"
-              className="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm"
+              disabled={isLoggingIn}
+              className="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              登入系統
+              {isLoggingIn ? '登入中...' : '登入系統'}
             </button>
           </form>
         </div>
         <div className="mt-8 text-center text-[10px] text-brand-300">
-          MULE EYELASH STUDIO <br /> SYSTEM VER 1.2
+          MULE EYELASH STUDIO <br /> SYSTEM VER 1.3
         </div>
       </div>
     );
